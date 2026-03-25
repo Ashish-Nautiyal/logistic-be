@@ -1,0 +1,11 @@
+--2026-03-26 00:41:16--  https://dbeaver.io/debs/dbeaver.gpg.key
+Resolving dbeaver.io (dbeaver.io)... 2604:a880:800:14:0:1:958:c000, 209.38.51.239
+Connecting to dbeaver.io (dbeaver.io)|2604:a880:800:14:0:1:958:c000|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 3155 (3.1K) [application/octet-stream]
+Saving to: ‘STDOUT’
+
+-                                     0%[                                                                    ]       0  --.-KB/s               -                                   100%[===================================================================>]   3.08K  --.-KB/s    in 0s      
+
+2026-03-26 00:41:19 (1.99 GB/s) - written to stdout [3155/3155]
+

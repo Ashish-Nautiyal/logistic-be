@@ -2,12 +2,17 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User } from '../models';
 import { config } from '../config';
-import { UserAttributes, UserRole, JwtPayload } from '../types';
+import { UserAttributes, UserRole, JwtPayload, AuthResponse } from '../types';
 import { emailService } from './email.service';
-import { RegisterInput } from '../validators';
 
 export class AuthService {
-  async register(data: RegisterInput): Promise<{ user: UserAttributes; tokens: { accessToken: string; refreshToken: string } }> {
+  async register(data: {
+    name: string;
+    email: string;
+    password: string;
+    phone?: string;
+    role?: UserRole;
+  }): Promise<AuthResponse> {
     const existingUser = await User.findOne({ where: { email: data.email } });
     if (existingUser) {
       throw new Error('Email already registered');
@@ -31,7 +36,7 @@ export class AuthService {
     };
   }
 
-  async login(email: string, password: string): Promise<{ user: UserAttributes; tokens: { accessToken: string; refreshToken: string } }> {
+  async login(email: string, password: string): Promise<AuthResponse> {
     const user = await User.findOne({ where: { email } });
     if (!user) {
       throw new Error('Invalid email or password');

@@ -71,3 +71,11 @@ export interface JwtPayload {
 export interface AuthenticatedRequest extends Express.Request {
   user?: JwtPayload;
 }
+
+export interface AuthResponse {
+  user: UserAttributes;
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+  };
+}

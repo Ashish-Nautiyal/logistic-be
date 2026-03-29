@@ -1,11 +1,10 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../config/database';
 import { OrderAttributes, OrderStatus } from '../types';
-import Client from './Client';
 import Driver from './Driver';
 import Vehicle from './Vehicle';
 
-type OrderCreationAttributes = Optional<OrderAttributes, 'id' | 'driverId' | 'vehicleId' | 'description' | 'deliveredAt' | 'createdAt' | 'updatedAt'>;
+type OrderCreationAttributes = Optional<OrderAttributes, 'id' | 'driverId' | 'vehicleId' | 'description' | 'deliveryNotes' | 'deliveredAt' | 'createdAt' | 'updatedAt'>;
 
 class Order extends Model<OrderAttributes, OrderCreationAttributes> implements OrderAttributes {
   public id!: string;
@@ -20,12 +19,13 @@ class Order extends Model<OrderAttributes, OrderCreationAttributes> implements O
   public deliveryCity!: string;
   public weight!: number;
   public description!: string | null;
+  public deliveryNotes!: string | null;
   public scheduledDate!: Date;
   public deliveredAt!: Date | null;
+  public companyId!: string | null;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
-  public readonly client?: Client;
   public readonly driver?: Driver;
   public readonly vehicle?: Vehicle;
 }
@@ -94,6 +94,10 @@ Order.init(
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    deliveryNotes: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
     scheduledDate: {
       type: DataTypes.DATEONLY,
       allowNull: false,
@@ -101,6 +105,14 @@ Order.init(
     deliveredAt: {
       type: DataTypes.DATE,
       allowNull: true,
+    },
+    companyId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'users',
+        key: 'id',
+      },
     },
   },
   {
@@ -111,8 +123,6 @@ Order.init(
   }
 );
 
-Order.belongsTo(Client, { foreignKey: 'clientId', as: 'client' });
-Client.hasMany(Order, { foreignKey: 'clientId', as: 'orders' });
 
 Order.belongsTo(Driver, { foreignKey: 'driverId', as: 'driver' });
 Driver.hasMany(Order, { foreignKey: 'driverId', as: 'orders' });

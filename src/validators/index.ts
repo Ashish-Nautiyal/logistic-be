@@ -10,7 +10,20 @@ export const registerSchema = z.object({
 
 export const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+});
+
+export const refreshTokenSchema = z.object({
+  refreshToken: z.string().min(1, 'Refresh token is required'),
+});
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().email('Invalid email address'),
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, 'Token is required'),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
 export const updateProfileSchema = z.object({
@@ -18,38 +31,9 @@ export const updateProfileSchema = z.object({
   phone: z.string().optional(),
 });
 
-export const createUserSchema = z.object({
-  name: z.string().min(2).max(100),
-  email: z.string().email(),
-  password: z.string().min(8),
-  phone: z.string().optional(),
-  role: z.enum(['admin', 'company', 'driver']),
-});
-
-export const updateUserSchema = z.object({
-  name: z.string().min(2).max(100).optional(),
-  email: z.string().email().optional(),
-  phone: z.string().optional(),
-  role: z.enum(['admin', 'company', 'driver']).optional(),
-  isActive: z.boolean().optional(),
-});
-
-export const createClientSchema = z.object({
-  name: z.string().min(2).max(255),
-  email: z.string().email(),
-  phone: z.string().min(1),
-  address: z.string().min(1),
-  city: z.string().min(1).max(100),
-  postalCode: z.string().min(1).max(20),
-});
-
-export const updateClientSchema = z.object({
-  name: z.string().min(2).max(255).optional(),
-  email: z.string().email().optional(),
-  phone: z.string().optional(),
-  address: z.string().optional(),
-  city: z.string().max(100).optional(),
-  postalCode: z.string().max(20).optional(),
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(8, 'Current password must be at least 8 characters'),
+  newPassword: z.string().min(8, 'New password must be at least 8 characters'),
 });
 
 export const createVehicleSchema = z.object({
@@ -124,8 +108,6 @@ export const updateDispatchSchema = z.object({
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
-export type CreateUserInput = z.infer<typeof createUserSchema>;
-export type CreateClientInput = z.infer<typeof createClientSchema>;
 export type CreateVehicleInput = z.infer<typeof createVehicleSchema>;
 export type CreateDriverInput = z.infer<typeof createDriverSchema>;
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;

@@ -1,10 +1,8 @@
 import sequelize from '../config/database';
 import User from './User';
-import Client from './Client';
 import Vehicle from './Vehicle';
 import Driver from './Driver';
 import Order from './Order';
-import Dispatch from './Dispatch';
 
 export const initializeModels = async (): Promise<void> => {
   try {
@@ -18,10 +16,8 @@ export const initializeModels = async (): Promise<void> => {
 
 export {
   User,
-  Client,
   Vehicle,
   Driver,
   Order,
-  Dispatch,
   sequelize,
 };

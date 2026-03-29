@@ -10,6 +10,7 @@ class Vehicle extends Model<VehicleAttributes, VehicleCreationAttributes> implem
   public vehicleType!: VehicleType;
   public capacity!: number;
   public status!: VehicleStatus;
+  public companyId!: string | null;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -37,6 +38,14 @@ Vehicle.init(
     status: {
       type: DataTypes.ENUM('available', 'in_use', 'maintenance'),
       defaultValue: 'available',
+    },
+    companyId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'users',
+        key: 'id',
+      },
     },
   },
   {

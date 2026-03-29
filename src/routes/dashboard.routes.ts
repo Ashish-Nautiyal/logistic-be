@@ -9,5 +9,6 @@ router.use(authenticate, isAdminOrManager);
 router.get('/stats', dashboardController.getStats.bind(dashboardController));
 router.get('/order-trends', dashboardController.getOrderTrends.bind(dashboardController));
 router.get('/driver-performance', dashboardController.getDriverPerformance.bind(dashboardController));
+router.get('/company-performance', dashboardController.getCompanyPerformance.bind(dashboardController));
 
 export default router;

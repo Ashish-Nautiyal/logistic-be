@@ -103,14 +103,6 @@ export class VehicleService {
 
     await vehicle.destroy();
   }
-
-  async getAvailable(): Promise<VehicleAttributes[]> {
-    const vehicles = await Vehicle.findAll({
-      where: { status: 'available' },
-      order: [['createdAt', 'DESC']],
-    });
-    return vehicles.map(v => v.toJSON() as VehicleAttributes);
-  }
 }
 
 export const vehicleService = new VehicleService();

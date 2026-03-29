@@ -13,6 +13,7 @@ class Driver extends Model<DriverAttributes, DriverCreationAttributes> implement
   public vehicleId!: string | null;
   public isAvailable!: boolean;
   public currentLocation!: { lat: number; lng: number } | null;
+  public companyId!: string | null;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
@@ -55,6 +56,14 @@ Driver.init(
     currentLocation: {
       type: DataTypes.JSONB,
       allowNull: true,
+    },
+    companyId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'users',
+        key: 'id',
+      },
     },
   },
   {

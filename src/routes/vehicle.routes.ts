@@ -8,7 +8,6 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/', vehicleController.findAll.bind(vehicleController));
-router.get('/available', vehicleController.getAvailable.bind(vehicleController));
 router.get('/:id', vehicleController.findById.bind(vehicleController));
 router.post('/', isAdminOrManager, validate(createVehicleSchema), vehicleController.create.bind(vehicleController));
 router.put('/:id', isAdminOrManager, validate(updateVehicleSchema), vehicleController.update.bind(vehicleController));

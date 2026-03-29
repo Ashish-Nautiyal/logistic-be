@@ -3,15 +3,11 @@ import jwt from 'jsonwebtoken';
 import { User } from '../models';
 import { config } from '../config';
 import { UserAttributes, UserRole, JwtPayload } from '../types';
+import { emailService } from './email.service';
+import { RegisterInput } from '../validators';
 
 export class AuthService {
-  async register(data: {
-    name: string;
-    email: string;
-    password: string;
-    phone?: string;
-    role?: UserRole;
-  }): Promise<{ user: UserAttributes; tokens: { accessToken: string; refreshToken: string } }> {
+  async register(data: RegisterInput): Promise<{ user: UserAttributes; tokens: { accessToken: string; refreshToken: string } }> {
     const existingUser = await User.findOne({ where: { email: data.email } });
     if (existingUser) {
       throw new Error('Email already registered');
@@ -104,6 +100,51 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(newPassword, 12);
     await user.update({ password: hashedPassword });
+  }
+
+  async forgotPassword(email: string): Promise<string> {
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const resetToken = jwt.sign(
+      { sub: user.id, type: 'password-reset' },
+      config.jwt.secret,
+      { expiresIn: '1h' }
+    );
+
+    try {
+      await emailService.sendPasswordResetEmail(email, resetToken);
+    } catch (error) {
+      console.error('Failed to send reset email:', error);
+      throw new Error('Failed to send reset email. Please try again.');
+    }
+
+    return resetToken;
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    try {
+      const decoded = jwt.verify(token, config.jwt.secret) as JwtPayload;
+      
+      if (decoded.type !== 'password-reset') {
+        throw new Error('Invalid token');
+      }
+
+      const user = await User.findByPk(decoded.sub);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+      await user.update({ password: hashedPassword });
+    } catch (error: any) {
+      if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+        throw new Error('Invalid or expired reset token');
+      }
+      throw error;
+    }
   }
 
   private async generateTokens(user: User): Promise<{ accessToken: string; refreshToken: string }> {

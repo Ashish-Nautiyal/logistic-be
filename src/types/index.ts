@@ -16,24 +16,13 @@ export interface UserAttributes {
   updatedAt?: Date;
 }
 
-export interface ClientAttributes {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  postalCode: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
 export interface VehicleAttributes {
   id: string;
   plateNumber: string;
   vehicleType: VehicleType;
   capacity: number;
   status: VehicleStatus;
+  companyId: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -45,6 +34,7 @@ export interface DriverAttributes {
   vehicleId: string | null;
   isAvailable: boolean;
   currentLocation: { lat: number; lng: number } | null;
+  companyId: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -62,28 +52,18 @@ export interface OrderAttributes {
   deliveryCity: string;
   weight: number;
   description: string | null;
+  deliveryNotes: string | null;
   scheduledDate: Date;
   deliveredAt: Date | null;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-export interface DispatchAttributes {
-  id: string;
-  orderId: string;
-  driverId: string;
-  vehicleId: string;
-  status: DispatchStatus;
-  startTime: Date | null;
-  endTime: Date | null;
-  notes: string | null;
+  companyId: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 export interface JwtPayload {
   sub: string;
-  role: UserRole;
+  role?: UserRole;
+  type?: 'password-reset';
   iat?: number;
   exp?: number;
 }

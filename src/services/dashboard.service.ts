@@ -1,4 +1,4 @@
-import { Order, Driver, Vehicle, Client, User, Dispatch } from '../models';
+import { Order, Driver, Vehicle, User } from '../models';
 import { Op } from 'sequelize';
 
 export class DashboardService {
@@ -11,7 +11,7 @@ export class DashboardService {
     availableDrivers: number;
     totalVehicles: number;
     availableVehicles: number;
-    totalClients: number;
+    totalCompanies: number;
     todayDeliveries: number;
     ordersByStatus: Record<string, number>;
     recentOrders: any[];
@@ -30,7 +30,7 @@ export class DashboardService {
       availableDrivers,
       totalVehicles,
       availableVehicles,
-      totalClients,
+      totalCompanies,
       recentOrders,
     ] = await Promise.all([
       Order.count(),
@@ -41,12 +41,11 @@ export class DashboardService {
       Driver.count({ where: { isAvailable: true } }),
       Vehicle.count(),
       Vehicle.count({ where: { status: 'available' } }),
-      Client.count(),
+      User.count({ where: { role: 'company' } }),
       Order.findAll({
         limit: 5,
         order: [['createdAt', 'DESC']],
         include: [
-          { model: Client, as: 'client', attributes: ['name'] },
           { model: Driver, as: 'driver', include: [{ model: User, as: 'user', attributes: ['name'] }] },
         ],
       }),
@@ -80,7 +79,7 @@ export class DashboardService {
       availableDrivers,
       totalVehicles,
       availableVehicles,
-      totalClients,
+      totalCompanies,
       todayDeliveries,
       ordersByStatus,
       recentOrders: recentOrders.map(o => o.toJSON()),
@@ -163,6 +162,40 @@ export class DashboardService {
     return performance
       .sort((a, b) => b.completedOrders - a.completedOrders)
       .slice(0, limit);
+  }
+
+  async getCompanyPerformance(): Promise<any[]> {
+    const companies = await User.findAll({
+      where: { role: 'company' },
+      attributes: ['id', 'name', 'email'],
+    });
+
+    const performance = await Promise.all(
+      companies.map(async (company) => {
+        const [totalOrders, completedOrders, pendingOrders, totalDrivers, totalVehicles] = await Promise.all([
+          Order.count({ where: { companyId: company.id } }),
+          Order.count({ where: { companyId: company.id, status: 'delivered' } }),
+          Order.count({ where: { companyId: company.id, status: { [Op.in]: ['pending', 'assigned', 'picked_up', 'in_transit'] } } }),
+          Driver.count({ where: { companyId: company.id } }),
+          Vehicle.count({ where: { companyId: company.id } }),
+        ]);
+
+        return {
+          companyId: company.id,
+          companyName: company.name,
+          companyEmail: company.email,
+          totalOrders,
+          completedOrders,
+          pendingOrders,
+          cancelledOrders: await Order.count({ where: { companyId: company.id, status: 'cancelled' } }),
+          totalDrivers,
+          totalVehicles,
+          completionRate: totalOrders > 0 ? Math.round((completedOrders / totalOrders) * 100) : 0,
+        };
+      })
+    );
+
+    return performance.sort((a, b) => b.totalOrders - a.totalOrders);
   }
 }
 

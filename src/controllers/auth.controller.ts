@@ -6,7 +6,7 @@ import { RegisterInput, LoginInput, updateProfileSchema } from '../validators';
 export class AuthController {
   async register(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const result = await authService.register(req.body);
+      const result = await authService.register(req.body as RegisterInput);
       res.status(201).json({
         success: true,
         message: 'User registered successfully',
@@ -40,13 +40,6 @@ export class AuthController {
   async refreshToken(req: AuthRequest, res: Response): Promise<void> {
     try {
       const { refreshToken } = req.body;
-      if (!refreshToken) {
-        res.status(400).json({
-          success: false,
-          message: 'Refresh token is required',
-        });
-        return;
-      }
       const tokens = await authService.refreshToken(refreshToken);
       res.json({
         success: true,
@@ -98,6 +91,38 @@ export class AuthController {
       res.json({
         success: true,
         message: 'Password changed successfully',
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
+  async forgotPassword(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const { email } = req.body;
+      await authService.forgotPassword(email);
+      res.json({
+        success: true,
+        message: 'Password reset link sent to your email',
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
+  async resetPassword(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const { token, newPassword } = req.body;
+      await authService.resetPassword(token, newPassword);
+      res.json({
+        success: true,
+        message: 'Password reset successfully',
       });
     } catch (error: any) {
       res.status(400).json({

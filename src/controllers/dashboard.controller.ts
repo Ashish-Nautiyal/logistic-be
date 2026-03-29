@@ -48,6 +48,21 @@ export class DashboardController {
       });
     }
   }
+
+  async getCompanyPerformance(req: Request, res: Response): Promise<void> {
+    try {
+      const performance = await dashboardService.getCompanyPerformance();
+      res.json({
+        success: true,
+        data: performance,
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
 }
 
 export const dashboardController = new DashboardController();

@@ -100,21 +100,6 @@ export class VehicleController {
       });
     }
   }
-
-  async getAvailable(req: Request, res: Response): Promise<void> {
-    try {
-      const vehicles = await vehicleService.getAvailable();
-      res.json({
-        success: true,
-        data: vehicles,
-      });
-    } catch (error: any) {
-      res.status(500).json({
-        success: false,
-        message: error.message,
-      });
-    }
-  }
 }
 
 export const vehicleController = new VehicleController();

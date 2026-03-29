@@ -1,5 +1,5 @@
 import { Op } from 'sequelize';
-import { Order, Client, Driver, User, Dispatch, Vehicle } from '../models';
+import { Order, Driver, User, Vehicle } from '../models';
 import { OrderAttributes, OrderStatus } from '../types';
 
 export class OrderService {
@@ -48,7 +48,6 @@ export class OrderService {
       offset,
       order: [['createdAt', 'DESC']],
       include: [
-        { model: Client, as: 'client', attributes: ['id', 'name', 'email', 'phone'] },
         { model: Driver, as: 'driver', include: [{ model: User, as: 'user', attributes: ['name', 'email'] }] },
         { model: Vehicle, as: 'vehicle', attributes: ['id', 'plateNumber', 'vehicleType'] },
       ],
@@ -63,9 +62,8 @@ export class OrderService {
   async findById(id: string): Promise<OrderAttributes | null> {
     const order = await Order.findByPk(id, {
       include: [
-        { model: Client, as: 'client' },
         { model: Driver, as: 'driver', include: [{ model: User, as: 'user' }] },
-        { model: Dispatch, as: 'dispatches', include: [{ model: Vehicle, as: 'vehicle' }] },
+        { model: Vehicle, as: 'vehicle', attributes: ['id', 'plateNumber', 'vehicleType'] },
       ],
     });
     return order ? (order.toJSON() as OrderAttributes) : null;
@@ -75,7 +73,6 @@ export class OrderService {
     const order = await Order.findOne({
       where: { orderNumber },
       include: [
-        { model: Client, as: 'client' },
         { model: Driver, as: 'driver', include: [{ model: User, as: 'user' }] },
       ],
     });
@@ -217,7 +214,6 @@ export class OrderService {
       offset,
       order: [['createdAt', 'DESC']],
       include: [
-        { model: Client, as: 'client', attributes: ['id', 'name', 'email', 'phone'] },
         { model: Driver, as: 'driver', include: [{ model: User, as: 'user', attributes: ['name', 'email'] }] },
       ],
     });

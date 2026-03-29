@@ -90,6 +90,22 @@ export class AuthController {
       });
     }
   }
+
+  async changePassword(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      await authService.changePassword(req.user!.sub, currentPassword, newPassword);
+      res.json({
+        success: true,
+        message: 'Password changed successfully',
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
 }
 
 export const authController = new AuthController();

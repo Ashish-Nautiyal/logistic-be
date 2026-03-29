@@ -40,5 +40,5 @@ export const authorize = (...roles: UserRole[]) => {
   };
 };
 
-export const isAdminOrManager = authorize('admin', 'manager');
+export const isAdminOrManager = authorize('admin', 'company');
 export const isAdmin = authorize('admin');

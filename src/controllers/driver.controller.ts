@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { driverService } from '../services';
+import { driverService, userService } from '../services';
 
 export class DriverController {
   async findAll(req: Request, res: Response): Promise<void> {
@@ -7,8 +7,9 @@ export class DriverController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
       const available = req.query.available === 'true' ? true : req.query.available === 'false' ? false : undefined;
+      const search = req.query.search as string;
 
-      const result = await driverService.findAll({ page, limit, available });
+      const result = await driverService.findAll({ page, limit, available, search });
       res.json({
         success: true,
         data: {
@@ -83,6 +84,22 @@ export class DriverController {
     }
   }
 
+  async updateLicense(req: Request, res: Response): Promise<void> {
+    try {
+      const driver = await driverService.updateLicense(req.params.id, req.body.licenseNumber);
+      res.json({
+        success: true,
+        message: 'Driver license updated successfully',
+        data: driver,
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
   async delete(req: Request, res: Response): Promise<void> {
     try {
       await driverService.delete(req.params.id);
@@ -122,6 +139,46 @@ export class DriverController {
       });
     } catch (error: any) {
       res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
+  async registerWithUser(req: Request, res: Response): Promise<void> {
+    try {
+      const { name, email, password, phone, licenseNumber, currentLocation } = req.body;
+      
+      const existingUser = await userService.findByEmail(email);
+      if (existingUser) {
+        res.status(400).json({
+          success: false,
+          message: 'Email already registered',
+        });
+        return;
+      }
+
+      const user = await userService.create({
+        name,
+        email,
+        password,
+        phone: phone || undefined,
+        role: 'driver',
+      });
+
+      const driver = await driverService.create({
+        userId: user.id,
+        licenseNumber,
+        currentLocation: currentLocation || null,
+      });
+
+      res.status(201).json({
+        success: true,
+        message: 'Driver registered successfully',
+        data: { user, driver },
+      });
+    } catch (error: any) {
+      res.status(400).json({
         success: false,
         message: error.message,
       });

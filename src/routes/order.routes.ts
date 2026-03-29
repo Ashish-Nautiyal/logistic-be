@@ -7,6 +7,7 @@ const router = Router();
 
 router.use(authenticate);
 
+router.get('/my-orders', orderController.findMyOrders.bind(orderController));
 router.get('/', orderController.findAll.bind(orderController));
 router.get('/number/:orderNumber', orderController.findByOrderNumber.bind(orderController));
 router.get('/:id', orderController.findById.bind(orderController));

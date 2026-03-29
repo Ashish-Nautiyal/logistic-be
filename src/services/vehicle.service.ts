@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import { Vehicle, Driver } from '../models';
 import { VehicleAttributes, VehicleStatus, VehicleType } from '../types';
 
@@ -7,6 +8,7 @@ export class VehicleService {
     limit?: number;
     status?: VehicleStatus;
     vehicleType?: VehicleType;
+    search?: string;
   }): Promise<{ rows: VehicleAttributes[]; count: number }> {
     const page = options?.page || 1;
     const limit = options?.limit || 10;
@@ -18,6 +20,9 @@ export class VehicleService {
     }
     if (options?.vehicleType) {
       where.vehicleType = options.vehicleType;
+    }
+    if (options?.search) {
+      where.plateNumber = { [Op.iLike]: `%${options.search}%` };
     }
 
     const { rows, count } = await Vehicle.findAndCountAll({

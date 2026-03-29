@@ -7,6 +7,7 @@ export class DriverService {
     page?: number;
     limit?: number;
     available?: boolean;
+    search?: string;
   }): Promise<{ rows: DriverAttributes[]; count: number }> {
     const page = options?.page || 1;
     const limit = options?.limit || 10;
@@ -17,15 +18,26 @@ export class DriverService {
       where.isAvailable = options.available;
     }
 
+    const include: any[] = [
+      { model: User, as: 'user', attributes: ['id', 'name', 'email', 'phone'] },
+    ];
+
+    if (options?.search) {
+      include[0].where = {
+        [Op.or]: [
+          { name: { [Op.iLike]: `%${options.search}%` } },
+          { email: { [Op.iLike]: `%${options.search}%` } },
+        ],
+      };
+      include[0].required = true;
+    }
+
     const { rows, count } = await Driver.findAndCountAll({
       where,
       limit,
       offset,
       order: [['createdAt', 'DESC']],
-      include: [
-        { model: User, as: 'user', attributes: ['id', 'name', 'email', 'phone'] },
-        { model: Vehicle, as: 'vehicle', attributes: ['id', 'plateNumber', 'vehicleType'] },
-      ],
+      include,
     });
 
     return {
@@ -58,7 +70,7 @@ export class DriverService {
   async create(data: {
     userId: string;
     licenseNumber: string;
-    vehicleId?: string;
+    currentLocation?: { lat: number; lng: number };
   }): Promise<DriverAttributes> {
     const existingDriver = await Driver.findOne({ where: { userId: data.userId } });
     if (existingDriver) {
@@ -77,9 +89,8 @@ export class DriverService {
     const driver = await Driver.create({
       userId: data.userId,
       licenseNumber: data.licenseNumber,
-      vehicleId: data.vehicleId || null,
+      currentLocation: data.currentLocation || null,
       isAvailable: true,
-      currentLocation: null,
     });
     return driver.toJSON() as DriverAttributes;
   }
@@ -120,17 +131,44 @@ export class DriverService {
     return driver.toJSON() as DriverAttributes;
   }
 
+  async updateLicense(id: string, licenseNumber: string): Promise<DriverAttributes> {
+    const driver = await Driver.findByPk(id);
+    if (!driver) {
+      throw new Error('Driver not found');
+    }
+
+    await driver.update({ licenseNumber });
+    return driver.toJSON() as DriverAttributes;
+  }
+
   async delete(id: string): Promise<void> {
     const driver = await Driver.findByPk(id);
     if (!driver) {
       throw new Error('Driver not found');
     }
 
+    const activeOrders = await Order.count({
+      where: {
+        driverId: id,
+        status: { [Op.notIn]: ['delivered', 'cancelled'] },
+      },
+    });
+
+    if (activeOrders > 0) {
+      throw new Error('Cannot delete driver with active orders');
+    }
+
+    const userId = driver.userId;
+
     if (driver.vehicleId) {
       await Vehicle.update({ status: 'available' }, { where: { id: driver.vehicleId } });
     }
 
     await driver.destroy();
+
+    if (userId) {
+      await User.destroy({ where: { id: userId } });
+    }
   }
 
   async getAvailable(): Promise<DriverAttributes[]> {

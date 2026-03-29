@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'manager' | 'driver';
+export type UserRole = 'admin' | 'company' | 'driver';
 export type OrderStatus = 'pending' | 'assigned' | 'picked_up' | 'in_transit' | 'delivered' | 'cancelled';
 export type VehicleType = 'truck' | 'van' | 'bike';
 export type VehicleStatus = 'available' | 'in_use' | 'maintenance';
@@ -54,6 +54,7 @@ export interface OrderAttributes {
   orderNumber: string;
   clientId: string;
   driverId: string | null;
+  vehicleId: string | null;
   status: OrderStatus;
   pickupAddress: string;
   pickupCity: string;

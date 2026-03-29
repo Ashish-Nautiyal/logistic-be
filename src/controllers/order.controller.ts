@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import { orderService } from '../services';
+import { AuthRequest } from '../middlewares/auth';
+import { orderService, driverService } from '../services';
 import { OrderStatus } from '../types';
 
 export class OrderController {
@@ -146,6 +147,50 @@ export class OrderController {
       });
     } catch (error: any) {
       res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
+  async findMyOrders(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.sub;
+      if (!userId) {
+        res.status(401).json({
+          success: false,
+          message: 'Unauthorized',
+        });
+        return;
+      }
+
+      const driver = await driverService.findByUserId(userId);
+      if (!driver) {
+        res.status(404).json({
+          success: false,
+          message: 'Driver profile not found',
+        });
+        return;
+      }
+
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      const result = await orderService.findByDriverId(driver.id, { page, limit });
+      res.json({
+        success: true,
+        data: {
+          orders: result.rows,
+          pagination: {
+            page,
+            limit,
+            total: result.count,
+            totalPages: Math.ceil(result.count / limit),
+          },
+        },
+      });
+    } catch (error: any) {
+      res.status(500).json({
         success: false,
         message: error.message,
       });

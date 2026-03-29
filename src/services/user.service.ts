@@ -1,4 +1,5 @@
-import { User, Driver, Vehicle } from '../models';
+import { Op } from 'sequelize';
+import { User, Driver, Vehicle, Order } from '../models';
 import { UserAttributes, UserRole } from '../types';
 import bcrypt from 'bcryptjs';
 
@@ -7,6 +8,7 @@ export class UserService {
     page?: number;
     limit?: number;
     role?: UserRole;
+    search?: string;
   }): Promise<{ rows: UserAttributes[]; count: number }> {
     const page = options?.page || 1;
     const limit = options?.limit || 10;
@@ -15,6 +17,12 @@ export class UserService {
     const where: any = {};
     if (options?.role) {
       where.role = options.role;
+    }
+    if (options?.search) {
+      where[Op.or] = [
+        { name: { [Op.iLike]: `%${options.search}%` } },
+        { email: { [Op.iLike]: `%${options.search}%` } },
+      ];
     }
 
     const { rows, count } = await User.findAndCountAll({
@@ -32,6 +40,11 @@ export class UserService {
 
   async findById(id: string): Promise<UserAttributes | null> {
     const user = await User.findByPk(id);
+    return user ? (user.toJSON() as UserAttributes) : null;
+  }
+
+  async findByEmail(email: string): Promise<UserAttributes | null> {
+    const user = await User.findOne({ where: { email } });
     return user ? (user.toJSON() as UserAttributes) : null;
   }
 
@@ -64,7 +77,6 @@ export class UserService {
     name?: string;
     email?: string;
     phone?: string;
-    role?: UserRole;
     isActive?: boolean;
   }): Promise<UserAttributes> {
     const user = await User.findByPk(id);
@@ -93,6 +105,21 @@ export class UserService {
       const adminCount = await User.count({ where: { role: 'admin' } });
       if (adminCount <= 1) {
         throw new Error('Cannot delete the last admin');
+      }
+    }
+
+    if (user.role === 'driver') {
+      const driver = await Driver.findOne({ where: { userId: user.id } });
+      if (driver) {
+        const activeOrders = await Order.count({
+          where: {
+            driverId: driver.id,
+            status: { [Op.notIn]: ['delivered', 'cancelled'] },
+          },
+        });
+        if (activeOrders > 0) {
+          throw new Error('Cannot delete driver with active orders');
+        }
       }
     }
 

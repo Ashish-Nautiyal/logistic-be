@@ -9,8 +9,9 @@ export class VehicleController {
       const limit = parseInt(req.query.limit as string) || 10;
       const status = req.query.status as VehicleStatus;
       const vehicleType = req.query.vehicleType as VehicleType;
+      const search = req.query.search as string;
 
-      const result = await vehicleService.findAll({ page, limit, status, vehicleType });
+      const result = await vehicleService.findAll({ page, limit, status, vehicleType, search });
       res.json({
         success: true,
         data: {

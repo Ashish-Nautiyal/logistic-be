@@ -5,7 +5,7 @@ export const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   phone: z.string().optional(),
-  role: z.enum(['admin', 'manager', 'driver']).optional(),
+  role: z.enum(['admin', 'company', 'driver']).optional(),
 });
 
 export const loginSchema = z.object({
@@ -23,14 +23,14 @@ export const createUserSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   phone: z.string().optional(),
-  role: z.enum(['admin', 'manager', 'driver']),
+  role: z.enum(['admin', 'company', 'driver']),
 });
 
 export const updateUserSchema = z.object({
   name: z.string().min(2).max(100).optional(),
   email: z.string().email().optional(),
   phone: z.string().optional(),
-  role: z.enum(['admin', 'manager', 'driver']).optional(),
+  role: z.enum(['admin', 'company', 'driver']).optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -69,7 +69,6 @@ export const updateVehicleSchema = z.object({
 export const createDriverSchema = z.object({
   userId: z.string().uuid(),
   licenseNumber: z.string().min(1).max(50),
-  vehicleId: z.string().uuid().optional(),
 });
 
 export const updateDriverSchema = z.object({
@@ -80,6 +79,10 @@ export const updateDriverSchema = z.object({
     lat: z.number(),
     lng: z.number(),
   }).nullable().optional(),
+});
+
+export const updateDriverLicenseSchema = z.object({
+  licenseNumber: z.string().min(1).max(50),
 });
 
 export const createOrderSchema = z.object({

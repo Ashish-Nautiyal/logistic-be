@@ -3,14 +3,16 @@ import sequelize from '../config/database';
 import { OrderAttributes, OrderStatus } from '../types';
 import Client from './Client';
 import Driver from './Driver';
+import Vehicle from './Vehicle';
 
-type OrderCreationAttributes = Optional<OrderAttributes, 'id' | 'driverId' | 'description' | 'deliveredAt' | 'createdAt' | 'updatedAt'>;
+type OrderCreationAttributes = Optional<OrderAttributes, 'id' | 'driverId' | 'vehicleId' | 'description' | 'deliveredAt' | 'createdAt' | 'updatedAt'>;
 
 class Order extends Model<OrderAttributes, OrderCreationAttributes> implements OrderAttributes {
   public id!: string;
   public orderNumber!: string;
   public clientId!: string;
   public driverId!: string | null;
+  public vehicleId!: string | null;
   public status!: OrderStatus;
   public pickupAddress!: string;
   public pickupCity!: string;
@@ -25,6 +27,7 @@ class Order extends Model<OrderAttributes, OrderCreationAttributes> implements O
 
   public readonly client?: Client;
   public readonly driver?: Driver;
+  public readonly vehicle?: Vehicle;
 }
 
 Order.init(
@@ -52,6 +55,14 @@ Order.init(
       allowNull: true,
       references: {
         model: 'drivers',
+        key: 'id',
+      },
+    },
+    vehicleId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'vehicles',
         key: 'id',
       },
     },
@@ -105,5 +116,8 @@ Client.hasMany(Order, { foreignKey: 'clientId', as: 'orders' });
 
 Order.belongsTo(Driver, { foreignKey: 'driverId', as: 'driver' });
 Driver.hasMany(Order, { foreignKey: 'driverId', as: 'orders' });
+
+Order.belongsTo(Vehicle, { foreignKey: 'vehicleId', as: 'vehicle' });
+Vehicle.hasMany(Order, { foreignKey: 'vehicleId', as: 'orders' });
 
 export default Order;

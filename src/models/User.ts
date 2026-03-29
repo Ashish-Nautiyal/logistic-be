@@ -44,7 +44,7 @@ User.init(
       allowNull: true,
     },
     role: {
-      type: DataTypes.ENUM('admin', 'manager', 'driver'),
+      type: DataTypes.ENUM('admin', 'company', 'driver'),
       defaultValue: 'driver',
     },
     isActive: {

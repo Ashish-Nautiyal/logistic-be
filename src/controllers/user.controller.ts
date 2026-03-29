@@ -8,8 +8,9 @@ export class UserController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
       const role = req.query.role as UserRole;
+      const search = req.query.search as string;
 
-      const result = await userService.findAll({ page, limit, role });
+      const result = await userService.findAll({ page, limit, role, search });
       res.json({
         success: true,
         data: {

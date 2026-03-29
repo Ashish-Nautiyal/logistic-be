@@ -11,6 +11,7 @@ export class OrderService {
     clientId?: string;
     startDate?: string;
     endDate?: string;
+    search?: string;
   }): Promise<{ rows: OrderAttributes[]; count: number }> {
     const page = options?.page || 1;
     const limit = options?.limit || 10;
@@ -31,6 +32,15 @@ export class OrderService {
         [Op.between]: [options.startDate, options.endDate],
       };
     }
+    if (options?.search) {
+      where[Op.or] = [
+        { orderNumber: { [Op.iLike]: `%${options.search}%` } },
+        { pickupCity: { [Op.iLike]: `%${options.search}%` } },
+        { deliveryCity: { [Op.iLike]: `%${options.search}%` } },
+        { pickupAddress: { [Op.iLike]: `%${options.search}%` } },
+        { deliveryAddress: { [Op.iLike]: `%${options.search}%` } },
+      ];
+    }
 
     const { rows, count } = await Order.findAndCountAll({
       where,
@@ -40,6 +50,7 @@ export class OrderService {
       include: [
         { model: Client, as: 'client', attributes: ['id', 'name', 'email', 'phone'] },
         { model: Driver, as: 'driver', include: [{ model: User, as: 'user', attributes: ['name', 'email'] }] },
+        { model: Vehicle, as: 'vehicle', attributes: ['id', 'plateNumber', 'vehicleType'] },
       ],
     });
 
@@ -110,6 +121,17 @@ export class OrderService {
       throw new Error('Cannot cancel an order that is already delivered or in transit');
     }
 
+    if (data.vehicleId && data.vehicleId !== order.vehicleId) {
+      if (order.vehicleId) {
+        await Vehicle.update({ status: 'available' }, { where: { id: order.vehicleId } });
+      }
+      await Vehicle.update({ status: 'in_use' }, { where: { id: data.vehicleId } });
+    }
+
+    if (!data.vehicleId && order.vehicleId) {
+      await Vehicle.update({ status: 'available' }, { where: { id: order.vehicleId } });
+    }
+
     await order.update(data);
     return order.toJSON() as OrderAttributes;
   }
@@ -136,6 +158,9 @@ export class OrderService {
     const updateData: any = { status };
     if (status === 'delivered') {
       updateData.deliveredAt = new Date();
+      if (order.vehicleId) {
+        await Vehicle.update({ status: 'available' }, { where: { id: order.vehicleId } });
+      }
     }
 
     await order.update(updateData);
@@ -176,6 +201,31 @@ export class OrderService {
     }
 
     await order.destroy();
+  }
+
+  async findByDriverId(driverId: string, options?: {
+    page?: number;
+    limit?: number;
+  }): Promise<{ rows: OrderAttributes[]; count: number }> {
+    const page = options?.page || 1;
+    const limit = options?.limit || 10;
+    const offset = (page - 1) * limit;
+
+    const { rows, count } = await Order.findAndCountAll({
+      where: { driverId },
+      limit,
+      offset,
+      order: [['createdAt', 'DESC']],
+      include: [
+        { model: Client, as: 'client', attributes: ['id', 'name', 'email', 'phone'] },
+        { model: Driver, as: 'driver', include: [{ model: User, as: 'user', attributes: ['name', 'email'] }] },
+      ],
+    });
+
+    return {
+      rows: rows.map(r => r.toJSON() as OrderAttributes),
+      count,
+    };
   }
 
   private async generateOrderNumber(): Promise<string> {
